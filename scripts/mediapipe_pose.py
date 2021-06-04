@@ -47,27 +47,32 @@ with mp_pose.Pose(
         image.flags.writeable = False
         results = pose.process(image)
 
-        landmarks = np.zeros((33, 3))
-        for i, lm in enumerate(results.pose_landmarks.landmark):
-            landmarks[i, ...] = np.array([lm.x, lm.z, -lm.y])
-        # print(results.pose_landmarks.ListFields())
-        # print(landmarks)
+        # landmarks = np.zeros((33, 3))
+        # for i, lm in enumerate(results.pose_landmarks.landmark):
+        #     landmarks[i, ...] = np.array([lm.x, lm.z, -lm.y])
+        # # print(results.pose_landmarks.ListFields())
+        # # print(landmarks)
 
 
-        ax.clear()
-        ax.scatter(*landmarks.T)
-        # plt.xlim(-0.5,1,5)
-        # plt.ylim(-3,1)
-        # plt.scatter(*landmarks.T)
-        plt.savefig('mediapose_test.png')
-        cv2.imshow("pseudo 3d", cv2.imread('mediapose_test.png')[:,:,::-1])
+        # ax.clear()
+        # ax.scatter(*landmarks.T)
+        # # plt.xlim(-0.5,1,5)
+        # # plt.ylim(-3,1)
+        # # plt.scatter(*landmarks.T)
+        # plt.savefig('mediapose_test.png')
+        # cv2.imshow("pseudo 3d", cv2.imread('mediapose_test.png')[:,:,::-1])
         
+
+
+
+
+
         # Draw the pose annotation on the image.
-        # image.flags.writeable = True
-        # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        # mp_drawing.draw_landmarks(
-        #     image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-        # cv2.imshow('MediaPipe Pose', cv2.resize(image, (image.shape[1]*2, image.shape[0]*2)))
+        image.flags.writeable = True
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        mp_drawing.draw_landmarks(
+            image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        cv2.imshow('MediaPipe Pose', cv2.resize(image, (image.shape[1]*2, image.shape[0]*2)))
         if cv2.waitKey(5) & 0xFF == 27:
             break
 cap.release()
