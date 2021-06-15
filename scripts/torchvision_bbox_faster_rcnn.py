@@ -9,6 +9,7 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image
 
+print(torchvision.__version__)
 
 coco_names = [
     '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
@@ -33,7 +34,7 @@ def main():
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True, pretrained_backbone=True)
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True, pretrained_backbone=True)
     model.eval()
     model.to(device)
 
@@ -53,7 +54,6 @@ def main():
         if not success:
             print("Webcam failed somehow?")
             continue
-        
 
         model_input = transform(frame).unsqueeze(0).to(device)
         outputs = model(model_input)
@@ -71,6 +71,8 @@ def main():
             break
 
         print("iteration_time", time.time() - iteration_time)
+    
+    cap.release()
 
 
 
