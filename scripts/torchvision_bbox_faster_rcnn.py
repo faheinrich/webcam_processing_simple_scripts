@@ -34,11 +34,10 @@ def main():
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True, pretrained_backbone=True)
-    model.eval()
-    model.to(device)
+    model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True, pretrained_backbone=True)
+    model.eval().to(device)
 
-    score_threshold = 0.7
+    score_threshold = 0.6
 
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -54,7 +53,8 @@ def main():
         if not success:
             print("Webcam failed somehow?")
             continue
-
+    
+        frame = frame[:,:,::-1].copy()
         model_input = transform(frame).unsqueeze(0).to(device)
         outputs = model(model_input)
 
@@ -66,7 +66,7 @@ def main():
 
         frame = draw_boxes(boxes, pred_classes, labels, frame)
 
-        cv2.imshow('frame', frame)
+        cv2.imshow('frame', frame[:,:,::-1])
         if cv2.waitKey(1) & 0xFF == 27:
             break
 

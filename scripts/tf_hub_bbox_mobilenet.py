@@ -63,7 +63,7 @@ def main():
         model_input = tf.convert_to_tensor(frame[None,...])
         detector_output = detector(model_input)
 
-        print(detector_output)
+        # print(detector_output)
 
         pred_classes = detector_output["detection_classes"].numpy().astype(np.uint8)[0]
         pred_scores = detector_output["detection_scores"].numpy()[0]
