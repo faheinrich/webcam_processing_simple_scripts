@@ -14,46 +14,16 @@ import matplotlib.patches as patches
 
 # Some modules to display an animation using imageio.
 import imageio
-from IPython.display import HTML, display
+# from IPython.display import HTML, display
 
-
-
-
-print("----------------------------")
-print("----------------------------")
 
 
 print("Tensorflow: Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
-
-
-print("----------------------------")
-print("----------------------------")
-
-print()
-
-model_name = "movenet_lightning"
-
-if model_name == "movenet_lightning":
-    module_pose = hub.load("https://tfhub.dev/google/movenet/singlepose/lightning/3")
-    input_size = 192
+module_pose = hub.load("https://tfhub.dev/google/movenet/singlepose/lightning/3")
+input_size = 192
 
 movenet = module_pose.signatures['serving_default']
-
-
-print("----------------------------")
-print("----------------------------")
-
-# load model
-module_depth = hub.load("https://tfhub.dev/intel/midas/v2/2", tags=['serve'])
-depth_midasv2 = module_depth.signatures['serving_default']
-
-print("----------------------------")
-print("----------------------------")
-
-
-
-print("hier")
 
 
 def estimate_2dpose(frame):
@@ -80,30 +50,6 @@ def estimate_2dpose(frame):
     return output_overlay[:,:,::-1]
 
 
-
-def estimate_depth(frame):
-
-    img = frame[:,:,::-1]
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) / 255.0
-
-    img_resized = tf.image.resize(img, [384,384], method='bicubic', preserve_aspect_ratio=False)
-    img_resized = tf.transpose(img_resized, [2, 0, 1])
-    img_input = img_resized.numpy()
-    reshape_img = img_input.reshape(1,3,384,384)
-    tensor = tf.convert_to_tensor(reshape_img, dtype=tf.float32)
-
-    output = depth_midasv2(tensor)
-    prediction = output['default'].numpy()
-    prediction = prediction.reshape(384, 384)
-
-    prediction = cv2.resize(prediction, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_CUBIC)
-    depth_min = prediction.min()
-    depth_max = prediction.max()
-    img_out = (255 * (prediction - depth_min) / (depth_max - depth_min)).astype("uint8")
-
-
-    return img_out
-
 def main():
     cap = cv2.VideoCapture(0)
 
@@ -116,13 +62,8 @@ def main():
 
         orig_shape = frame.shape
 
-
         image = estimate_2dpose(frame)
 
-        # depth_image = estimate_depth(frame)
-
-        # Visualize the predictions with image.
-        
         frame = cv2.resize(image, (orig_shape[1]*3, orig_shape[0]*3))
         cv2.imshow("Webcam", frame)
         if cv2.waitKey(1) & 0xFF == 27: # use ESC to quit

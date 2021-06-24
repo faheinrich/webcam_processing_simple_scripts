@@ -30,6 +30,10 @@ width = 640
 
 def main():
 
+
+    # Inputs
+    # A three-channel image of variable size - the model does NOT support batching. The input tensor is a tf.uint8 tensor with shape [1, height, width, 3] with values in [0, 255].
+
     # The output dictionary contains:
     # num_detections: a tf.int tensor with only one value, the number of detections [N].
     # detection_boxes: a tf.float32 tensor of shape [N, 4] containing bounding box coordinates in the following order: [ymin, xmin, ymax, xmax].
