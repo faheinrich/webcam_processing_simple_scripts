@@ -1,15 +1,9 @@
-import torchvision
 import torch
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchvision.models.detection import FasterRCNN
-from torchvision.models.detection.rpn import AnchorGenerator
 import cv2
+import numpy
 import time
-import torchvision.transforms as transforms
 import numpy as np
-from PIL import Image
 
-print(torchvision.__version__)
 
 coco_names = [
     '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
@@ -25,7 +19,6 @@ coco_names = [
     'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',
     'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
 ]
-
 COLORS = np.random.uniform(0, 255, size=(len(coco_names), 3))
 
 
@@ -33,15 +26,10 @@ COLORS = np.random.uniform(0, 255, size=(len(coco_names), 3))
 def main():
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
-    model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True, pretrained_backbone=True)
+    # Model
+    model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
     model.eval().to(device)
-
-    score_threshold = 0.6
-
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-    ])
+    model.classes = [0] # filter for specific classes
 
 
     cap = cv2.VideoCapture(0)
@@ -53,36 +41,30 @@ def main():
         if not success:
             print("Webcam failed somehow?")
             continue
-    
         frame = frame[:,:,::-1].copy()
-        model_input = transform(frame).unsqueeze(0).to(device)
-        outputs = model(model_input)
 
-        labels = outputs[0]['labels'].cpu().numpy()
-        pred_classes = [coco_names[i] for i in labels]
-        pred_scores = outputs[0]['scores'].detach().cpu().numpy()
-        pred_bboxes = outputs[0]['boxes'].detach().cpu().numpy()
-        boxes = pred_bboxes[pred_scores >= score_threshold].astype(np.int32)
+        model_output = model(frame)
+        results = model_output.pandas().xyxy[0]
+        pred_classes = results["name"]
+        labels = results["class"]
 
-        print(boxes)
+        boxes = model_output.xyxy[0].cpu().numpy()[:,:4].astype(np.int32)
+
         frame = draw_boxes(boxes, pred_classes, labels, frame)
 
         cv2.imshow('frame', frame[:,:,::-1])
         if cv2.waitKey(1) & 0xFF == 27:
             break
 
+        # model_output.print()
         print("iteration_time", time.time() - iteration_time)
-    
-    cap.release()
-
 
 
 def draw_boxes(boxes, classes, labels, image):
 
     for i, box in enumerate(boxes):
         color = COLORS[labels[i]]
-        cv2.rectangle(
-            image,
+        cv2.rectangle(image,
             (int(box[0]), int(box[1])),
             (int(box[2]), int(box[3])),
             color, 2
