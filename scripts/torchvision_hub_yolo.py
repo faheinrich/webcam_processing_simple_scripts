@@ -29,8 +29,9 @@ def main():
     # Model
     model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
     model.eval().to(device)
-    model.classes = [0] # filter for specific classes
+    # model.classes = [0] # filter for specific classes
 
+    confidenece_threshold = 0.7
 
     cap = cv2.VideoCapture(0)
     while cap.isOpened():
@@ -47,8 +48,13 @@ def main():
         results = model_output.pandas().xyxy[0]
         pred_classes = results["name"]
         labels = results["class"]
+        scores = results["confidence"]
 
         boxes = model_output.xyxy[0].cpu().numpy()[:,:4].astype(np.int32)
+
+
+        boxes = boxes[scores > confidenece_threshold]
+        labels = labels[scores > confidenece_threshold]
 
         frame = draw_boxes(boxes, pred_classes, labels, frame)
 
