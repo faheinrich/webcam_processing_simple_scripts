@@ -52,7 +52,7 @@ def main():
 
         boxes = model_output.xyxy[0].cpu().numpy()[:,:4].astype(np.int32)
 
-
+	# filter condidence thresh
         boxes = boxes[scores > confidenece_threshold]
         labels = labels[scores > confidenece_threshold]
 

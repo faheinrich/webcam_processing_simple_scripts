@@ -35,7 +35,6 @@ def main():
 
     score_threshold = 0.7
 
-
     cap = cv2.VideoCapture(0)
     while cap.isOpened():
     
