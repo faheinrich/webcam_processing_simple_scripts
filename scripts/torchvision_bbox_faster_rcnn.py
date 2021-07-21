@@ -1,13 +1,9 @@
-import torchvision
-import torch
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchvision.models.detection import FasterRCNN
-from torchvision.models.detection.rpn import AnchorGenerator
-import cv2
 import time
-import torchvision.transforms as transforms
+import sys
 import numpy as np
-from PIL import Image
+import cv2
+import torch
+import torchvision
 
 print(torchvision.__version__)
 
@@ -33,14 +29,20 @@ COLORS = np.random.uniform(0, 255, size=(len(coco_names), 3))
 def main():
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    print(torch.cuda.get_device_name(device))
 
-    model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True, pretrained_backbone=True)
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "fast":
+            model = torchvision.models.detection.fasterrcnn_mobilenet_v3_large_320_fpn(pretrained=True, pretrained_backbone=True)
+    else:
+        model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True, pretrained_backbone=True)
+    
     model.eval().to(device)
 
-    score_threshold = 0.6
+    score_threshold = 0.65
 
-    transform = transforms.Compose([
-        transforms.ToTensor(),
+    transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
     ])
 
 
@@ -54,7 +56,8 @@ def main():
             print("Webcam failed somehow?")
             continue
     
-        frame = frame[:,:,::-1].copy()
+        frame = frame[:,:,::-1].copy() / 255
+        frame = frame.astype(np.float32)
         model_input = transform(frame).unsqueeze(0).to(device)
         outputs = model(model_input)
 
@@ -64,14 +67,13 @@ def main():
         pred_bboxes = outputs[0]['boxes'].detach().cpu().numpy()
         boxes = pred_bboxes[pred_scores >= score_threshold].astype(np.int32)
 
-        print(boxes)
         frame = draw_boxes(boxes, pred_classes, labels, frame)
 
-        cv2.imshow('frame', frame[:,:,::-1])
+        cv2.imshow('frame', cv2.resize(np.uint8(frame[:,:,::-1] * 255), (frame.shape[1]*3, frame.shape[0]*3)))
         if cv2.waitKey(1) & 0xFF == 27:
             break
 
-        print("iteration_time", time.time() - iteration_time)
+        print("iter_time:", "%.4f" % (time.time() - iteration_time), "hz:", "%.2f" % (1/(time.time() - iteration_time)))
     
     cap.release()
 
