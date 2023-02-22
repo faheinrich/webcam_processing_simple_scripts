@@ -44,7 +44,6 @@ def draw_boxes(boxes, classes, labels, image):
 
 
 def pixmap_from_cv_image(cv_image: np.ndarray):
-    print(type(cv_image))
     height, width, _ = cv_image.shape
     bytesPerLine = 3 * width
     qImg = QImage(cv_image.data, width, height, bytesPerLine, QImage.Format.Format_RGB888).rgbSwapped()
@@ -72,7 +71,7 @@ class DetectorGui(QMainWindow):
         self.image_display.show()  # You were missing this.
 
         exit_button = QPushButton("Exit")
-        exit_button.clicked.connect(self.exit_btn)
+        exit_button.clicked.connect(sys.exit)
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(exit_button)
 
@@ -86,10 +85,6 @@ class DetectorGui(QMainWindow):
 
         self.detector_thread = ObjectDetectionThread(self)
         self.detector_thread.start()
-
-    def exit_btn(self):
-        print("Exiting...")
-        sys.exit()
 
     def change_img(self, img):
         self.image_display.setPixmap(pixmap_from_cv_image(img))
@@ -107,7 +102,7 @@ class ObjectDetectionThread(Thread):
             self.device = torch.device('cuda')
         else:
             self.device = torch.device('cpu')
-        print("Using device", self.device)
+        print("Using device:", self.device)
 
         self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
         self.model.eval().to(self.device)
